@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """成长学习站：读取 data/content.py、data/lectures.py，生成 dist/（index.html、week-01..12.html、assets/）。
 与 briefing-site 完全独立；发布时作为 briefing 仓库的 growth/ 子目录。"""
-import sys, json, pathlib, shutil, datetime, html
+import sys, re, json, pathlib, shutil, datetime, html
 ROOT = pathlib.Path(__file__).resolve().parent; DIST = ROOT / "dist"
 sys.path.insert(0, str(ROOT / "data"))
 from content import L, PHASES, W
@@ -22,27 +22,39 @@ def page(title, body, side):
 <script>document.documentElement.dataset.theme=localStorage.getItem('bf_theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')</script></head>
 <body data-root=""><header><div class="bar"><a class="logo" href="index.html">🌱 成长学习站</a>
 <div class="search"><input id="q" placeholder="搜索 12 周讲义（标题/主题）…"></div><button class="btn" id="menu">☰ 目录</button><button class="btn" id="theme" title="切换主题">🌓</button></div></header>
-<div class="wrap"><aside id="side">{side}</aside><main id="main">{body}</main></div><script src="assets/search-index.js"></script><script src="assets/app.js"></script>
+<div class="wrap"><aside id="side">{side}</aside><main id="main">{body}</main></div><script src="assets/search-index.js"></script><script src="assets/nav.js"></script><script src="assets/app.js"></script>
 <!-- built {datetime.datetime.now():%Y-%m-%d %H:%M} 北京时间 --></body></html>"""
-def directory(cur=None):
-    h = '<a class="iss" href="todo.html">☑ 练习待办</a><a class="iss fav-link" href="index.html#fav">★ 我的收藏 <small><span id="favcnt">0</span> 条</small></a><a class="iss" href="index.html#done">✓ 已完成</a>'
+def directory(cur=None, here=""):
+    def nb(key, href, ico, label, badge=""):
+        on = " on" if here == key else ""
+        bd = f'<b class="bdg" id="{badge}">0</b>' if badge else ""
+        return f'<a class="nbtn{on}" data-nav="{key}" href="{href}"><i>{ico}</i><span>{label}</span>{bd}</a>'
+    h = '<div class="navsec">常用</div><nav class="nav1">'
+    h += nb("home", "index.html", "🏠", "首页")
+    h += '<a class="nbtn" id="nav-cur" href="week-01.html"><i>📅</i><span>本周 · <em id="nav-curt">第1周</em></span></a>'
+    h += nb("todo", "todo.html", "☑", "练习待办", "bdg-todo")
+    h += nb("fav", "index.html#fav", "★", "我的收藏", "bdg-fav")
+    h += nb("done", "index.html#done", "✓", "已完成", "bdg-done")
+    h += '</nav><div class="navsec">12 周课程</div>'
     for name, rng, ws, *_ in PHASES:
-        op = " open" if (cur in ws or (cur is None)) else ""
-        h += f'<details class="drw"{op}><summary class="sidesec">{name}<small>{rng}</small></summary><div class="drwlist">'
+        h += f'<div class="phs">{name}<small>{rng}</small></div>'
         for n in ws:
-            w = W[n-1]; on = " on" if cur == n else ""
-            h += f'<a class="iss{on}" href="week-{n:02d}.html">第{n}周 · {e(w[1])} <small>{fd(wstart(n))}</small></a>'
-        h += '</div></details>'
+            on = " on" if cur == n else ""
+            h += f'<a class="wk{on}" data-wk="{n}" href="week-{n:02d}.html"><span>第{n}周 · {e(W[n-1][1])}</span><i class="ok">✓</i></a>'
     return h
+def topnav(n):
+    pv = f'<a class="tb" href="week-{n-1:02d}.html">← 上一周</a>' if n > 1 else '<span class="tb dis">← 上一周</span>'
+    nx = f'<a class="tb" href="week-{n+1:02d}.html">下一周 →</a>' if n < 12 else '<span class="tb dis">下一周 →</span>'
+    return f'<div class="tnav"><a class="tb" href="index.html">🏠 首页</a>{pv}{nx}</div>'
 def card(n, cid, title, body, url=None):
     pg = f"week-{n:02d}.html#{cid}"; u = url or pg
     return f'<div class="card" id="{cid}" data-id="growth|{cid}" data-title="第{n}周 · {e(title)}" data-url="{e(u)}" data-page="{pg}" data-date="{wstart(n)}" data-kind="week"><h4>{e(title)}</h4>{body}<div class="foot"><span class="acts"><button class="rd" title="标记完成">✓</button><button class="fv" title="收藏">☆</button></span></div></div>'
-idx = []
+idx = []; WIDS = {}
 def week(n):
     _, topic, days, lab, out, mats, (os_keys, os_what), qa_outline = W[n-1]
     s = wstart(n); lec = LECT.get(n)
     ph = next(p for p in PHASES if n in p[2])
-    b = f'<div class="crumb"><a href="index.html">← 首页</a><span class="tag">{ph[0]}</span></div><h1>第{n}周 · {e(topic)}</h1>'
+    b = topnav(n) + f'<div class="crumb"><span class="tag">{ph[0]}</span></div><h1>第{n}周 · {e(topic)}</h1>'
     b += f'<div class="meta">{fd(s)}（周一）– {fd(s+datetime.timedelta(days=6))}（周日）· 北京时间 · 已完成 <span id="readcnt">0</span> 项</div>'
     if not lec: b += '<div class="todo">📝 本周目前是骨架：讲义将在该周开始前一周补写。</div>'
     b += f'<h3 class="sec">本周目标</h3><p>{e(lec["goal"]) if lec else "完成下列 5 天学习、周末实验和产出「"+e(out)+"」，能不看资料讲清本周主题。"}</p>'
@@ -68,11 +80,13 @@ def week(n):
     b += '</div></div>'
     pv = f'<a class="pv" href="week-{n-1:02d}.html"><small>← 上一周</small>第{n-1}周 · {e(W[n-2][1])}</a>' if n > 1 else '<span class="pv"><small>← 上一周</small>没有了</span>'
     nx = f'<a class="nx" href="week-{n+1:02d}.html"><small>下一周 →</small>第{n+1}周 · {e(W[n][1])}</a>' if n < 12 else '<span class="nx"><small>下一周 →</small>没有了</span>'
-    b += f'<div class="pn">{pv}{nx}</div>'
+    b += f'<div class="pn">{pv}{nx}</div><div class="tnav"><a class="tb" href="index.html">🏠 返回首页</a></div>'
+    WIDS[n] = re.findall(r'data-id="(growth\|[^"]+)"', b)
     idx.append({"k": "week", "d": str(s), "t": f"第{n}周 · {topic}", "s": "；".join(days), "p": f"week-{n:02d}.html"})
     return page(f"第{n}周 · {topic} · 成长学习站", b, directory(n))
 def home():
-    b = '<h1>成长学习站 · 12 周架构师成长计划（第一轮）</h1><div class="meta">AI 研发效能 → 分布式原理 → 存储与高并发 · 每周 6–9 小时 · 第 1 周从 2026 年 11 月 9 日（周一，北京时间）开始</div>'
+    b = '<div class="curcard" id="curcard"><div class="cc-k" id="cc-k">本周</div><h2 id="cc-t">第1周</h2><div class="cc-row"><a class="cc-go" id="cc-go" href="week-01.html">进入本周 →</a><a class="cc-todo" href="todo.html">☑ 待办未完成 <b id="cc-todo">0</b> 项</a></div></div>'
+    b += '<h1>成长学习站 · 12 周架构师成长计划（第一轮）</h1><div class="meta">AI 研发效能 → 分布式原理 → 存储与高并发 · 每周 6–9 小时 · 第 1 周从 2026 年 11 月 9 日（周一，北京时间）开始</div>'
     b += '<div class="note">ℹ️ 这是第一轮，目标是打通主干不是学完。可观测性和架构方法（DDD、ADR）只在第 11–12 周轻量入门，第二轮再深入。</div>'
     for name, rng, ws, test, outp in PHASES:
         b += f'<h3 class="sec">{name} <span>{rng}</span></h3><div class="grid">'
@@ -86,9 +100,9 @@ def home():
 <div class="card"><h4>学会的标准</h4><p>三条都过才算：能不看资料讲清楚；能自己实现最小版本；能对比方案并说出取舍。</p></div></div>'''
     b += '<p><a class="card icard" href="todo.html"><b>☑ 练习待办</b> · 回家要动手的练习清单</a></p><h3 class="sec" id="fav">★ 我的收藏</h3><div id="favs"></div><h3 class="sec" id="done">✓ 已完成</h3><div id="dones"></div>'
     b += '<p class="meta">收藏和完成记录保存在本浏览器（localStorage），与新闻简报站互不影响。</p>'
-    return page("成长学习站", b, directory())
+    return page("成长学习站", b, directory(here="home"))
 def todo_page():
-    b = '<div class="crumb"><a href="index.html">← 首页</a></div><h1>☑ 练习待办</h1><div class="note">勾选只保存在当前浏览器，不同设备不同步。</div>'
+    b = '<div class="tnav"><a class="tb" href="index.html">🏠 首页</a></div><h1>☑ 练习待办</h1><div class="note">勾选只保存在当前浏览器，不同设备不同步。</div>'
     for t in TODOS:
         b += f'<h3 class="sec">{e(t["title"])}</h3><p><b>目标：</b>{e(t["goal"])}</p>'
         if t.get("week"): b += f'<p>对应：<a href="week-{t["week"]:02d}.html">第{t["week"]}周 · {e(W[t["week"]-1][1])}</a></p>'
@@ -99,12 +113,15 @@ def todo_page():
         if t.get("refs"): b += '<h4>官方资料</h4><ul>' + "".join(f'<li><a href="{e(u)}" target="_blank" rel="noopener">{e(n)} ↗</a></li>' for n, u in t["refs"]) + '</ul>'
     b += """<style>.tdi{display:flex;gap:12px;align-items:flex-start;margin:10px 0;cursor:pointer}.tdi input{width:24px;height:24px;flex:none;margin-top:2px}.tdi.ck h4{text-decoration:line-through;opacity:.6}.uv{color:#b07d00;font-size:.92em}pre.cmp{overflow-x:auto;padding:12px;font-size:13px;background:rgba(128,128,128,.1);border-radius:8px}code{word-break:break-all}</style>
 <script>(function(){var K='gs_todo',s=JSON.parse(localStorage.getItem(K)||'{}');document.querySelectorAll('.tdi input').forEach(function(c){var k=c.dataset.k;c.checked=!!s[k];c.closest('.tdi').classList.toggle('ck',c.checked);c.addEventListener('change',function(){if(c.checked)s[k]=1;else delete s[k];localStorage.setItem(K,JSON.stringify(s));c.closest('.tdi').classList.toggle('ck',c.checked)})})})()</script>"""
-    return page("练习待办 · 成长学习站", b, directory())
+    return page("练习待办 · 成长学习站", b, directory(here="todo"))
 if DIST.exists(): shutil.rmtree(DIST)
 (DIST / "assets").mkdir(parents=True)
 for f in ("style.css", "app.js"): shutil.copy(ROOT / "assets_src" / f, DIST / "assets" / f)
 for n in range(1, 13): (DIST / f"week-{n:02d}.html").write_text(week(n), "utf-8")
 (DIST / "assets" / "search-index.js").write_text("window.SEARCH=" + json.dumps(idx, ensure_ascii=False).replace("</", "<\\/") + ";", "utf-8")
 (DIST / "index.html").write_text(home(), "utf-8")
+NAV = {"start": str(START), "weeks": [[n, W[n-1][1]] for n in range(1, 13)], "wids": WIDS,
+       "todo": [f'{t["id"]}|{sid}' for t in TODOS for sid, *_ in t["steps"]]}
+(DIST / "assets" / "nav.js").write_text("window.NAV=" + json.dumps(NAV, ensure_ascii=False).replace("</", "<\\/") + ";", "utf-8")
 (DIST / "todo.html").write_text(todo_page(), "utf-8")
 print("生成", DIST, "12 周 +首页；链接可用", len(ok), "/", len(L))

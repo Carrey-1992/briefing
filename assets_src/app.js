@@ -33,3 +33,19 @@ if(window.SEARCH){const M=$('#main'),home=M.innerHTML;
   el.innerHTML=l.length?`<div class="grid">${l.map(x=>row({...x,g:''})).join('')}</div>`:'<div class="empty">在期页面点卡片右下角 ☆ 收藏，会出现在这里</div>'};
  window.renderDone=()=>{const el=$('#dones');if(!el)return;const l=Object.values(read).filter(v=>typeof v==='object').sort((a,b)=>a.d.localeCompare(b.d));el.innerHTML=l.length?`<div class="grid">${l.map(x=>row({...x,g:''})).join('')}</div>`:'<div class="empty">在周页面点卡片右下角 ✓ 标记完成，会出现在这里</div>'};
  renderFav();renderDone()}
+// 导航 v2：本周、角标、已完成周
+(function(){if(!window.NAV)return;const N=window.NAV;
+ const d0=new Date(N.start+'T00:00:00+08:00'),now=new Date();
+ let cw=Math.floor((now-d0)/(7*864e5))+1;cw=Math.max(1,Math.min(12,cw));
+ const t=N.weeks[cw-1][1],href=`week-${String(cw).padStart(2,'0')}.html`;
+ const nc=$('#nav-cur');if(nc){nc.href=href;$('#nav-curt').textContent=`第${cw}周`;const m=location.pathname.match(/week-(\d+)/);if(m&&+m[1]===cw)nc.classList.add('on')}
+ $$('.wk').forEach(a=>{const n=a.dataset.wk,ids=N.wids[n]||[];a.classList.toggle('now',+n===cw);a.classList.toggle('dn',ids.length>0&&ids.every(i=>read[i]))});
+ if($('#cc-t')){$('#cc-k').textContent=now<d0?`本周 · 第1周 ${+N.start.slice(5,7)}月${+N.start.slice(8)}日开始`:`本周 · 第${cw}周`;$('#cc-t').textContent=`第${cw}周 · ${t}`;$('#cc-go').href=href}
+ const td=JSON.parse(localStorage.getItem('gs_todo')||'{}'),left=N.todo.filter(k=>!td[k]).length;
+ const set=(id,v)=>{const e=document.getElementById(id);if(e){e.textContent=v;e.classList.toggle('hot',id==='bdg-todo'&&v>0)}};
+ const upd=()=>{const t2=JSON.parse(localStorage.getItem('gs_todo')||'{}');const l=N.todo.filter(k=>!t2[k]).length;set('bdg-todo',l);set('cc-todo',l);set('bdg-fav',Object.keys(fav).length);set('bdg-done',Object.keys(read).length);
+  $$('.wk').forEach(a=>{const ids=N.wids[a.dataset.wk]||[];a.classList.toggle('dn',ids.length>0&&ids.every(i=>read[i]))})};
+ upd();document.body.addEventListener('click',()=>setTimeout(upd,0));document.body.addEventListener('change',()=>setTimeout(upd,0));
+ const hs=()=>{if(location.pathname.endsWith('/')||location.pathname.endsWith('index.html')){$$('.nbtn[data-nav]').forEach(a=>a.classList.toggle('on',a.dataset.nav===({'#fav':'fav','#done':'done'}[location.hash]||'home')))}};hs();addEventListener('hashchange',hs);
+ $$('#side a').forEach(a=>a.addEventListener('click',()=>$('#side').classList.remove('open')));
+})();
