@@ -1,0 +1,43 @@
+# 成长学习站数据。来源：Page「12周架构师成长计划（第一轮）」。讲义只引用实际读过的文档。
+L = {
+ "mcp_intro":("MCP 官方文档 · 入门","https://modelcontextprotocol.io/docs/getting-started/intro"),
+ "mcp_arch":("MCP 架构概览（Architecture overview）","https://modelcontextprotocol.io/docs/learn/architecture"),
+ "mcp_java":("MCP Java SDK","https://github.com/modelcontextprotocol/java-sdk"),
+ "mcp_java_disc":("MCP Java SDK Discussions","https://github.com/modelcontextprotocol/java-sdk/discussions"),
+ "cc":("Claude Code 官方文档","https://docs.anthropic.com/en/docs/claude-code/overview"),
+ "cc_mem":("Claude Code：CLAUDE.md 与记忆","https://docs.anthropic.com/en/docs/claude-code/memory"),
+ "bea":("Anthropic《Building effective agents》","https://www.anthropic.com/engineering/building-effective-agents"),
+ "cursor":("Cursor 文档","https://docs.cursor.com"),
+ "raft":("Raft 官网","https://raft.github.io/"),"raftpdf":("Raft 论文（PDF）","https://raft.github.io/raft.pdf"),
+ "mit":("MIT 6.824 分布式系统","https://pdos.csail.mit.edu/6.824/"),"jepsen":("Jepsen 一致性模型","https://jepsen.io/consistency"),
+ "gg":("Gossip Glomers 分布式练习","https://fly.io/dist-sys/"),"ddia":("Designing Data-Intensive Applications","https://dataintensive.net/"),
+ "saga":("Saga 模式（microservices.io）","https://microservices.io/patterns/data/saga.html"),"cmu":("CMU 15-445 数据库系统","https://15445.courses.cs.cmu.edu/"),
+ "redis":("Redis 官方文档","https://redis.io/docs/latest/"),"kafka":("Kafka 官方文档","https://kafka.apache.org/documentation/"),
+ "prom":("Prometheus 文档","https://prometheus.io/docs/introduction/overview/"),"sky":("SkyWalking 文档","https://skywalking.apache.org/docs/"),
+ "sentinel":("Sentinel 文档","https://sentinelguard.io/zh-cn/docs/introduction.html"),"r4j":("Resilience4j 文档","https://resilience4j.readme.io/docs"),
+ "adr":("ADR 架构决策记录","https://adr.github.io/"),
+ "cline":("cline/cline","https://github.com/cline/cline"),"aider":("Aider-AI/aider","https://github.com/Aider-AI/aider"),
+ "lc4j":("LangChain4j Discussions","https://github.com/langchain4j/langchain4j/discussions"),"pra":("qodo-ai/pr-agent","https://github.com/qodo-ai/pr-agent"),
+ "rd":("reviewdog/reviewdog","https://github.com/reviewdog/reviewdog"),"etcd":("etcd Discussions","https://github.com/etcd-io/etcd/discussions"),
+ "etcdraft":("etcd-io/raft","https://github.com/etcd-io/raft"),"hraft":("hashicorp/raft Issues","https://github.com/hashicorp/raft/issues"),
+ "mysql":("mysql/mysql-server","https://github.com/mysql/mysql-server"),"redisgh":("redis/redis","https://github.com/redis/redis"),
+ "kafkagh":("apache/kafka","https://github.com/apache/kafka"),"sentgh":("alibaba/Sentinel","https://github.com/alibaba/Sentinel"),"r4jgh":("resilience4j/resilience4j","https://github.com/resilience4j/resilience4j"),
+}
+PHASES = [("阶段一 · AI 研发效能","第1–4周",[1,2,3,4],"讲清 Agent 循环和 MCP 三类能力；自写 MCP Server 被 AI 真实调用；说出 AI 评审的命中与漏报边界","文章 1 篇 + MCP/RAG 实验目录"),
+ ("阶段二 · 分布式原理","第5–8周",[5,6,7,8],"不看资料画出 Raft 选主与日志复制；对比 2PC/TCC/Saga 并给出选型；解释线性一致与最终一致的差别","文章 1 篇 + Raft 最小实现"),
+ ("阶段三 · 存储与高并发","第9–12周",[9,10,11,12],"复现并解释 MVCC/间隙锁；说清缓存一致性方案取舍；讲清 Kafka 不丢不重的条件；配置并验证限流熔断","文章 1 篇 + 实验目录 + 1 篇 ADR")]
+# n, 主题, 工作日五天, 实验, 产出, 资料keys, 开源项目(keys, 看什么), 回忆题大纲
+W = [
+ (1,"AI 编码代理原理",["Agent 循环（上下文/工具调用/权限）","读 Anthropic《Building effective agents》","Claude Code/Cursor 规则文件与项目约定","上下文窗口与成本","回忆题 5 道"],"用 Claude Code 或 Cursor 给一个小 Java 项目写规则文件，对比有/无规则时生成代码的差异","卡片：AI 编码代理",["bea","cc","cc_mem","cursor"],(["cline","aider"],"代理如何管理上下文、工具调用和权限"),[]),
+ (2,"MCP 协议",["MCP 架构（Host/Client/Server）","Tools/Resources/Prompts 三类能力","传输方式 stdio 与 Streamable HTTP","读 MCP Java SDK 示例","回忆题"],"用 MCP Java SDK 写一个最小 MCP Server（如查询本地 CSV），接入 Claude Code 真实调用","卡片：MCP",["mcp_intro","mcp_arch","mcp_java"],(["mcp_java_disc"],"传输方式、Server 实现问题"),[]),
+ (3,"Prompt、Skill 与 RAG 入门",["Prompt 结构化写法","Skill/规则沉淀团队知识","RAG 流程（切分/向量/召回/重排）","RAG 常见失败模式","回忆题"],"做一个最小 RAG：对一组技术文档切分+向量检索+问答，记录召回失败的例子","卡片：RAG",["cc","cursor"],(["lc4j"],"RAG 召回与 Prompt 相关问题"),["RAG 的四个环节各自可能在哪里失败？","切分粒度太大/太小分别有什么后果？","重排（rerank）解决的是什么问题？","Skill 和一次性 Prompt 的区别是什么？","怎么判断一次回答是“召回错”还是“生成错”？"]),
+ (4,"AI 代码评审与质量门禁",["AI 评审擅长/易漏什么","JUnit/Mockito 与 AI 生成测试","SonarQube 质量门禁概念","AI 评审接入 CI 的流程","阶段一自测"],"写一个评审 Skill/Prompt，对 3 段有已知缺陷的代码评审，统计命中与漏报；写阶段一文章","卡片：AI 代码评审；阶段一文章",["cc"],(["pra","rd"],"AI 评审误报漏报、CI 接入"),["AI 评审最容易漏掉哪类缺陷？为什么？","AI 生成的单测有什么典型陷阱？","质量门禁应该卡什么、不该卡什么？","如何量化一个评审 Prompt 的效果？","AI 评审放在 CI 的哪一步合适？"]),
+ (5,"一致性模型与 CAP",["线性一致/顺序一致/因果/最终一致","CAP 与 PACELC","DDIA 复制章节","逻辑时钟与向量时钟","回忆题"],"用 Java 模拟带延迟的多副本读写，复现读到旧值，对比线性一致与最终一致","卡片：一致性模型",["jepsen","ddia","mit"],(["etcd","etcdraft","hraft"],"一致性、选主、日志复制相关 Issue"),["线性一致和顺序一致的区别？","CAP 里的 C 指的是哪种一致性？","PACELC 补充了 CAP 什么？","向量时钟能判断什么、不能判断什么？","举一个最终一致会出业务问题的例子"]),
+ (6,"Raft 共识",["读 Raft 论文前半部分","选主与任期","日志复制与提交规则","安全性与成员变更概览","回忆题"],"实现 Raft 最小版：选主+日志复制（单进程多线程模拟网络），可参考 MIT 6.824 Lab 思路","卡片：Raft",["raftpdf","raft","mit"],(["etcdraft","hraft","etcd"],"选主、日志复制相关 Issue"),["任期（term）的作用是什么？","为什么选举超时要随机？","一条日志何时算已提交？","Leader 能否直接提交旧任期的日志？为什么？","网络分区时少数派 Leader 会怎样？"]),
+ (7,"分布式事务",["2PC 与其阻塞问题","TCC","Saga（编排与协同）","本地消息表/事务消息与幂等","回忆题"],"用订单+库存两服务实现 Saga 与补偿，注入失败，验证最终一致与幂等","卡片：分布式事务选型表",["saga","ddia"],(["etcd","hraft"],"一致性相关讨论"),["2PC 在哪一步会阻塞？","TCC 的空回滚和悬挂是什么？","Saga 编排与协同各适合什么场景？","本地消息表如何保证消息不丢？","幂等通常怎么实现？"]),
+ (8,"复制与分片",["DDIA 分区章节","一致性哈希与再平衡","主从/多主/无主复制取舍","热点与倾斜","阶段二自测"],"做 Fly.io Gossip Glomers 前几题，或实现一致性哈希并测再平衡迁移量；写阶段二文章","卡片：复制与分片；阶段二文章",["ddia","gg"],(["etcd","etcdraft"],"分片相关 Issue"),["一致性哈希为什么能减少迁移量？虚拟节点解决什么？","按范围分区和按哈希分区的取舍？","无主复制的 quorum 条件？","热点 key 有哪些缓解方法？","多主复制的冲突怎么解决？"]),
+ (9,"MySQL 引擎与 MVCC",["B+ 树索引与回表","Redo/Undo/Binlog 与两阶段提交","MVCC 与 Read View","行锁/间隙锁/死锁","回忆题"],"在 Docker MySQL 里用两个会话复现 RR 下快照读与当前读差异、间隙锁与一次死锁，读 SHOW ENGINE INNODB STATUS","卡片：MVCC 与锁",["cmu"],(["mysql"],"只读代码与提交记录（该仓库不走 GitHub Issues，缺陷在 MySQL Bug 系统，此说法未单独核实）"),["回表是什么，覆盖索引怎么避免？","Redo 和 Binlog 为什么要两阶段提交？","Read View 判断可见性的规则？","RR 下为什么还需要间隙锁？","如何从 INNODB STATUS 读出死锁双方？"]),
+ (10,"Redis 与缓存一致性",["数据结构与内存模型","持久化 RDB/AOF","Cache Aside、延迟双删","击穿/穿透/雪崩与热 key","回忆题"],"并发压测 Cache Aside，复现缓存与库不一致，再用删除+重试或 binlog 订阅修复并对比","卡片：缓存一致性",["redis"],(["redisgh"],"持久化、内存、热 key 相关 Issue"),["Cache Aside 为什么是先写库再删缓存？","延迟双删的延迟怎么定？","RDB 与 AOF 的取舍？","击穿、穿透、雪崩分别怎么防？","binlog 订阅删缓存的优缺点？"]),
+ (11,"Kafka 设计 + 可观测性入门",["分区/副本/ISR","生产端幂等与事务、消费位移","顺序与重复消费","入门 Prometheus 指标与 SkyWalking 链路（第二轮再深入）","回忆题"],"Docker 起 Kafka，杀掉一个 Broker 观察 ISR 与 acks 对丢消息的影响；给消费者加 Prometheus 指标","卡片：Kafka 可靠性",["kafka","prom","sky"],(["kafkagh"],"只读代码与 PR 讨论（缺陷跟踪在 Apache JIRA，此说法未单独核实）"),["ISR 是什么，什么时候副本会被踢出？","acks=all 一定不丢吗？条件是什么？","生产者幂等解决什么问题？","如何保证分区内顺序消费？","指标、日志、链路各回答什么问题？"]),
+ (12,"限流熔断降级 + 架构方法入门 + 总复盘",["令牌桶/漏桶/滑动窗口","熔断状态机","降级与隔离","入门 DDD 与 ADR 写法（第二轮再深入）","12 周总回忆题"],"用 Resilience4j 或 Sentinel 给一个接口加限流+熔断，压测看状态切换；为本轮选型写 1 篇 ADR；写阶段三文章与总复盘","卡片：限流熔断；ADR；阶段三文章",["sentinel","r4j","adr"],(["sentgh","r4jgh"],"限流熔断问题；复盘 12 周记下的差异"),["令牌桶和漏桶的区别？","熔断器三个状态如何切换？","降级和熔断的区别？","一篇 ADR 应包含哪些部分？","12 周里你最薄弱的一块是什么，第二轮怎么补？"]),
+]
