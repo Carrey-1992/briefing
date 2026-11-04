@@ -43,9 +43,21 @@ if(window.SEARCH){const M=$('#main'),home=M.innerHTML;
  if($('#cc-t')){$('#cc-k').textContent=now<d0?`本周 · 第1周 ${+N.start.slice(5,7)}月${+N.start.slice(8)}日开始`:`本周 · 第${cw}周`;$('#cc-t').textContent=`第${cw}周 · ${t}`;$('#cc-go').href=href}
  const td=JSON.parse(localStorage.getItem('gs_todo')||'{}'),left=N.todo.filter(k=>!td[k]).length;
  const set=(id,v)=>{const e=document.getElementById(id);if(e){e.textContent=v;e.classList.toggle('hot',id==='bdg-todo'&&v>0)}};
- const upd=()=>{const t2=JSON.parse(localStorage.getItem('gs_todo')||'{}');const l=N.todo.filter(k=>!t2[k]).length;set('bdg-todo',l);set('cc-todo',l);set('bdg-fav',Object.keys(fav).length);set('bdg-done',Object.keys(read).length);
+ const upd=()=>{const t2=JSON.parse(localStorage.getItem('gs_todo')||'{}');const l=N.todo.filter(k=>!t2[k]).length;set('bdg-todo',l);set('bdg-todo2',l);set('bdg-fd',Object.keys(fav).length+Object.keys(read).length);
+  $$('.tdl').forEach(a=>{const ks=(N.todos||{})[a.dataset.td]||[];a.querySelector('.frac').textContent=ks.filter(k=>t2[k]).length+'/'+ks.length;a.classList.toggle('dn',ks.length&&ks.every(k=>t2[k]))});
+  set('bdg-learn',Object.keys(N.wids).filter(n=>{const ids=N.wids[n];return ids.length&&ids.every(i=>read[i])}).length+'/12');
+  $$('[data-phc]').forEach(b=>{const ws=b.closest('.dw').dataset.ws.split(',');b.textContent=ws.filter(n=>{const ids=N.wids[n]||[];return ids.length&&ids.every(i=>read[i])}).length+'/'+ws.length});set('cc-todo',l);set('bdg-fav',Object.keys(fav).length);set('bdg-done',Object.keys(read).length);
   $$('.wk').forEach(a=>{const ids=N.wids[a.dataset.wk]||[];a.classList.toggle('dn',ids.length>0&&ids.every(i=>read[i]))})};
  upd();document.body.addEventListener('click',()=>setTimeout(upd,0));document.body.addEventListener('change',()=>setTimeout(upd,0));
  const hs=()=>{if(location.pathname.endsWith('/')||location.pathname.endsWith('index.html')){$$('.nbtn[data-nav]').forEach(a=>a.classList.toggle('on',a.dataset.nav===({'#fav':'fav','#done':'done'}[location.hash]||'home')))}};hs();addEventListener('hashchange',hs);
  $$('#side a').forEach(a=>a.addEventListener('click',()=>$('#side').classList.remove('open')));
+
+ // 分类抽屉（手风琴），状态存 gs_drawer
+ const cph='ph'+(N.weeks.length?[1,2,3].find(i=>{const d=document.querySelector(`.dw[data-dw="ph${i}"]`);return d&&d.dataset.ws.split(',').includes(String(cw))})||1:1);
+ let ds=JSON.parse(localStorage.getItem('gs_drawer')||'{}');
+ const def={todo:1,learn:1,fav:0,ph1:0,ph2:0,ph3:0};def[cph]=1;
+ const pageWk=(location.pathname.match(/week-(\d+)/)||[])[1];
+ $$('.dw').forEach(d=>{const k=d.dataset.dw;let o=k in ds?ds[k]:def[k];
+  if(pageWk&&d.dataset.ws&&d.dataset.ws.split(',').includes(String(+pageWk))&&!(k in ds))o=1;d.classList.toggle('open',!!o)});
+ $$('.dwh').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const d=b.closest('.dw');d.classList.toggle('open');ds[d.dataset.dw]=d.classList.contains('open')?1:0;localStorage.setItem('gs_drawer',JSON.stringify(ds))}));
 })();

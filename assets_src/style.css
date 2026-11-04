@@ -79,3 +79,20 @@ summary.sidesec{padding:8px 10px;margin:0}summary.sidesec small{margin-left:auto
 .cc-row{display:flex;gap:10px;flex-wrap:wrap}.cc-row a{color:#fff;padding:10px 18px;border-radius:12px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4)}
 .cc-row a.cc-go{background:#fff;color:var(--acc)}.cc-row a:hover{text-decoration:none}
 @media(max-width:820px){aside.open{background:var(--bg);padding:6px 0 14px;border-bottom:1px solid var(--line)}.nbtn{padding:11px 14px}.wk{padding:10px 12px}.tb{flex:1;text-align:center}}
+
+/* 导航 v3：分类抽屉 */
+.dw{margin:0 0 10px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.dw.small .dwh{padding:8px 12px;font-size:13.5px}
+.dwh{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:11px 12px;cursor:pointer;font-weight:800;font-size:15px;color:var(--text)}
+.dwh:hover{background:var(--soft)}.dwh i{font-style:normal;width:20px;text-align:center}.dwh span{flex:1}
+.arr{width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s;margin:0 4px}
+.dw.open>.dwh .arr{transform:rotate(45deg)}
+.dwb{display:none;padding:2px 8px 10px;flex-direction:column;gap:4px}.dw.open>.dwb{display:flex}
+.dw .nbtn{background:var(--bg);padding:8px 10px}
+.sub small.sub,.nbtn .sub{color:var(--muted);font-weight:400;font-size:12px}.nbtn .sub b{color:var(--acc)}
+.dw.sub{margin:4px 0 0;border-radius:10px;background:var(--bg)}
+.dwh2{padding:8px 10px;font-size:13.5px;font-weight:700}.dwh2 small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.dw.sub .dwb{padding:0 4px 6px}
+.tdl .frac{color:var(--muted);font-size:12px}.tdl.dn span{text-decoration:line-through;opacity:.6}.tdl.dn .frac{color:#10b981}
+.tdl span:before{content:"• ";color:var(--acc)}
+@media(max-width:820px){.dwh{padding:13px 14px}.dwh2{padding:11px 12px}}

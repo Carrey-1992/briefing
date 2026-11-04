@@ -25,22 +25,27 @@ def page(title, body, side):
 <div class="wrap"><aside id="side">{side}</aside><main id="main">{body}</main></div><script src="assets/search-index.js"></script><script src="assets/nav.js"></script><script src="assets/app.js"></script>
 <!-- built {datetime.datetime.now():%Y-%m-%d %H:%M} 北京时间 --></body></html>"""
 def directory(cur=None, here=""):
-    def nb(key, href, ico, label, badge=""):
-        on = " on" if here == key else ""
-        bd = f'<b class="bdg" id="{badge}">0</b>' if badge else ""
-        return f'<a class="nbtn{on}" data-nav="{key}" href="{href}"><i>{ico}</i><span>{label}</span>{bd}</a>'
-    h = '<div class="navsec">常用</div><nav class="nav1">'
-    h += nb("home", "index.html", "🏠", "首页")
+    def dh(key, ico, label, badge):
+        return f'<button class="dwh" type="button" data-dw="{key}"><i>{ico}</i><span>{label}</span><b class="bdg" id="{badge}">0</b><em class="arr"></em></button>'
+    on = lambda c: " on" if c else ""
+    h = '<div class="dw" data-dw="todo">' + dh("todo", "☑", "待办", "bdg-todo") + '<div class="dwb">'
+    h += f'<a class="nbtn{on(here=="todo")}" data-nav="todo" href="todo.html"><i>📋</i><span>练习待办</span><small class="sub">未完成 <b id="bdg-todo2">0</b></small></a>'
+    for t in TODOS:
+        h += f'<a class="wk tdl" data-td="{e(t["id"])}" href="todo.html#td-{e(t["id"])}"><span>{e(t["title"])}</span><small class="frac">0/{len(t["steps"])}</small></a>'
+    h += '</div></div>'
+    h += '<div class="dw" data-dw="learn">' + dh("learn", "📚", "学习", "bdg-learn") + '<div class="dwb">'
+    h += f'<a class="nbtn{on(here=="home")}" data-nav="home" href="index.html"><i>🏠</i><span>首页</span></a>'
     h += '<a class="nbtn" id="nav-cur" href="week-01.html"><i>📅</i><span>本周 · <em id="nav-curt">第1周</em></span></a>'
-    h += nb("todo", "todo.html", "☑", "练习待办", "bdg-todo")
-    h += nb("fav", "index.html#fav", "★", "我的收藏", "bdg-fav")
-    h += nb("done", "index.html#done", "✓", "已完成", "bdg-done")
-    h += '</nav><div class="navsec">12 周课程</div>'
-    for name, rng, ws, *_ in PHASES:
-        h += f'<div class="phs">{name}<small>{rng}</small></div>'
+    for i, (name, rng, ws, *_) in enumerate(PHASES):
+        h += f'<div class="dw sub" data-dw="ph{i+1}" data-ws="{",".join(map(str, ws))}"><button class="dwh dwh2" type="button" data-dw="ph{i+1}"><span>{name}<small>{rng}</small></span><b class="bdg" data-phc="{i+1}">0/{len(ws)}</b><em class="arr"></em></button><div class="dwb">'
         for n in ws:
-            on = " on" if cur == n else ""
-            h += f'<a class="wk{on}" data-wk="{n}" href="week-{n:02d}.html"><span>第{n}周 · {e(W[n-1][1])}</span><i class="ok">✓</i></a>'
+            h += f'<a class="wk{on(cur==n)}" data-wk="{n}" href="week-{n:02d}.html"><span>第{n}周 · {e(W[n-1][1])}</span><i class="ok">✓</i></a>'
+        h += '</div></div>'
+    h += '</div></div>'
+    h += '<div class="dw small" data-dw="fav">' + dh("fav", "⭐", "收藏与完成", "bdg-fd") + '<div class="dwb">'
+    h += f'<a class="nbtn" data-nav="fav" href="index.html#fav"><i>★</i><span>我的收藏</span><b class="bdg" id="bdg-fav">0</b></a>'
+    h += f'<a class="nbtn" data-nav="done" href="index.html#done"><i>✓</i><span>已完成</span><b class="bdg" id="bdg-done">0</b></a>'
+    h += '</div></div>'
     return h
 def topnav(n):
     pv = f'<a class="tb" href="week-{n-1:02d}.html">← 上一周</a>' if n > 1 else '<span class="tb dis">← 上一周</span>'
@@ -104,7 +109,7 @@ def home():
 def todo_page():
     b = '<div class="tnav"><a class="tb" href="index.html">🏠 首页</a></div><h1>☑ 练习待办</h1><div class="note">勾选只保存在当前浏览器，不同设备不同步。</div>'
     for t in TODOS:
-        b += f'<h3 class="sec">{e(t["title"])}</h3><p><b>目标：</b>{e(t["goal"])}</p>'
+        b += f'<h3 class="sec" id="td-{e(t["id"])}">{e(t["title"])}</h3><p><b>目标：</b>{e(t["goal"])}</p>'
         if t.get("week"): b += f'<p>对应：<a href="week-{t["week"]:02d}.html">第{t["week"]}周 · {e(W[t["week"]-1][1])}</a></p>'
         for sid, st, sb in t["steps"]:
             k = f'{t["id"]}|{sid}'
@@ -121,7 +126,8 @@ for n in range(1, 13): (DIST / f"week-{n:02d}.html").write_text(week(n), "utf-8"
 (DIST / "assets" / "search-index.js").write_text("window.SEARCH=" + json.dumps(idx, ensure_ascii=False).replace("</", "<\\/") + ";", "utf-8")
 (DIST / "index.html").write_text(home(), "utf-8")
 NAV = {"start": str(START), "weeks": [[n, W[n-1][1]] for n in range(1, 13)], "wids": WIDS,
-       "todo": [f'{t["id"]}|{sid}' for t in TODOS for sid, *_ in t["steps"]]}
+       "todo": [f'{t["id"]}|{sid}' for t in TODOS for sid, *_ in t["steps"]],
+       "todos": {t["id"]: [f'{t["id"]}|{sid}' for sid, *_ in t["steps"]] for t in TODOS}}
 (DIST / "assets" / "nav.js").write_text("window.NAV=" + json.dumps(NAV, ensure_ascii=False).replace("</", "<\\/") + ";", "utf-8")
 (DIST / "todo.html").write_text(todo_page(), "utf-8")
 print("生成", DIST, "12 周 +首页；链接可用", len(ok), "/", len(L))
