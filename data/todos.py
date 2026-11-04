@@ -64,4 +64,14 @@ services:
    ("JMX Exporter", "https://github.com/prometheus/jmx_exporter"),
    ("Kafka UI（kafbat）", "https://github.com/kafbat/kafka-ui"),
   ]},
+ {"id": "k8s-lab", "title": "K8s 专项实验（家里电脑）", "track": "k8s",
+  "goal": "在家里电脑用 Docker + kind 完成 K8s 专项 4 个模块的实验。命令均未在本机运行验证，详见各模块页。",
+  "steps": [
+   ("s0", "装 Docker、kind、kubectl，kind create cluster 跑通", "<p>按 <a href='k8s-01.html'>模块1</a> 实验第 1 步：装好后 <code>kubectl get nodes</code> 能看到 Ready 节点。</p>"),
+   ("s1", "模块1：kubectl 看调谐 + Java 客户端列出/创建/监听 Pod", "<p>见 <a href='k8s-01.html'>模块1 实验</a>。产出：watch 事件序列截图。</p>"),
+   ("s2", "模块2：构造 Pending，试污点/容忍和节点亲和", "<p>见 <a href='k8s-02.html'>模块2 实验</a>。产出：抄下 FailedScheduling 原因并解释。</p>"),
+   ("s3", "模块3：命名空间配额 + LimitRange + RBAC，触发超限", "<p>见 <a href='k8s-03.html'>模块3 实验</a>。产出：403 超限原文。</p>"),
+   ("s4", "模块4：Job/CronJob、假 GPU 扩展资源、Kueue 排队", "<p>见 <a href='k8s-04.html'>模块4 实验</a>。产出：第二个 Job 排队等待的截图。</p>"),
+  ],
+  "refs": [("kind 快速开始", "https://kind.sigs.k8s.io/docs/user/quick-start/"), ("kubectl 安装", "https://kubernetes.io/docs/tasks/tools/")]},
 ]

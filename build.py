@@ -7,6 +7,9 @@ sys.path.insert(0, str(ROOT / "data"))
 from content import L, PHASES, W
 from lectures import LECT
 from todos import TODOS
+from k8s import M as KM, R as KR
+kok = {l.split()[0] for l in (ROOT/'data/k8s_linkcheck.txt').read_text().splitlines() if l.endswith(' 200')}
+KIDS = {}
 ok = {l.split()[0] for l in (ROOT/"data/linkcheck.txt").read_text().splitlines() if l.endswith(" 200")}
 e = lambda s: html.escape(str(s or ""), quote=True)
 START = datetime.date(2026, 11, 9)
@@ -32,6 +35,11 @@ def directory(cur=None, here=""):
     h += f'<a class="nbtn{on(here=="todo")}" data-nav="todo" href="todo.html"><i>📋</i><span>练习待办</span><small class="sub">未完成 <b id="bdg-todo2">0</b></small></a>'
     for t in TODOS:
         h += f'<a class="wk tdl" data-td="{e(t["id"])}" href="todo.html#td-{e(t["id"])}"><span>{e(t["title"])}</span><small class="frac">0/{len(t["steps"])}</small></a>'
+    h += '</div></div>'
+    h += '<div class="dw" data-dw="sp">' + dh("sp", "🎯", "专项", "bdg-sp") + '<div class="dwb">'
+    h += f'<a class="nbtn{on(here=="k8s")}" href="k8s.html"><i>☸</i><span>总览</span><b class="bdg" id="bdg-k8s">0/{len(KM)}</b></a>'
+    for i, m in enumerate(KM):
+        h += f'<a class="wk km{on(here==m["id"])}" data-km="{m["id"]}" href="{m["id"]}.html"><span>模块{i+1} · {e(m["short"])}</span><i class="ok">✓</i></a>'
     h += '</div></div>'
     h += '<div class="dw" data-dw="learn">' + dh("learn", "📚", "学习", "bdg-learn") + '<div class="dwb">'
     h += f'<a class="nbtn{on(here=="home")}" data-nav="home" href="index.html"><i>🏠</i><span>首页</span></a>'
@@ -90,7 +98,8 @@ def week(n):
     idx.append({"k": "week", "d": str(s), "t": f"第{n}周 · {topic}", "s": "；".join(days), "p": f"week-{n:02d}.html"})
     return page(f"第{n}周 · {topic} · 成长学习站", b, directory(n))
 def home():
-    b = '<div class="curcard" id="curcard"><div class="cc-k" id="cc-k">本周</div><h2 id="cc-t">第1周</h2><div class="cc-row"><a class="cc-go" id="cc-go" href="week-01.html">进入本周 →</a><a class="cc-todo" href="todo.html">☑ 待办未完成 <b id="cc-todo">0</b> 项</a></div></div>'
+    b = '<div class="cc2"><div class="curcard" id="curcard"><div class="cc-k" id="cc-k">本周</div><h2 id="cc-t">第1周</h2><div class="cc-row"><a class="cc-go" id="cc-go" href="week-01.html">进入本周 →</a><a class="cc-todo" href="todo.html">☑ 待办未完成 <b id="cc-todo">0</b> 项</a></div></div>'
+    b += f'<a class="curcard spcard" href="k8s.html"><div class="cc-k">🎯 专项</div><h2>K8s 与调度器</h2><div class="cc-row"><span class="cc-go">进入专项 →</span><span class="cc-todo">完成 <b id="cc-k8s">0/{len(KM)}</b> 个模块</span></div></a></div>'
     b += '<h1>成长学习站 · 12 周架构师成长计划（第一轮）</h1><div class="meta">AI 研发效能 → 分布式原理 → 存储与高并发 · 每周 6–9 小时 · 第 1 周从 2026 年 11 月 9 日（周一，北京时间）开始</div>'
     b += '<div class="note">ℹ️ 这是第一轮，目标是打通主干不是学完。可观测性和架构方法（DDD、ADR）只在第 11–12 周轻量入门，第二轮再深入。</div>'
     for name, rng, ws, test, outp in PHASES:
@@ -110,6 +119,7 @@ def todo_page():
     b = '<div class="tnav"><a class="tb" href="index.html">🏠 首页</a></div><h1>☑ 练习待办</h1><div class="note">勾选只保存在当前浏览器，不同设备不同步。</div>'
     for t in TODOS:
         b += f'<h3 class="sec" id="td-{e(t["id"])}">{e(t["title"])}</h3><p><b>目标：</b>{e(t["goal"])}</p>'
+        if t.get("track"): b += '<p>对应：<a href="k8s.html">🎯 专项 · K8s 与调度器</a></p>'
         if t.get("week"): b += f'<p>对应：<a href="week-{t["week"]:02d}.html">第{t["week"]}周 · {e(W[t["week"]-1][1])}</a></p>'
         for sid, st, sb in t["steps"]:
             k = f'{t["id"]}|{sid}'
@@ -119,15 +129,54 @@ def todo_page():
     b += """<style>.tdi{display:flex;gap:12px;align-items:flex-start;margin:10px 0;cursor:pointer}.tdi input{width:24px;height:24px;flex:none;margin-top:2px}.tdi.ck h4{text-decoration:line-through;opacity:.6}.uv{color:#b07d00;font-size:.92em}pre.cmp{overflow-x:auto;padding:12px;font-size:13px;background:rgba(128,128,128,.1);border-radius:8px}code{word-break:break-all}</style>
 <script>(function(){var K='gs_todo',s=JSON.parse(localStorage.getItem(K)||'{}');document.querySelectorAll('.tdi input').forEach(function(c){var k=c.dataset.k;c.checked=!!s[k];c.closest('.tdi').classList.toggle('ck',c.checked);c.addEventListener('change',function(){if(c.checked)s[k]=1;else delete s[k];localStorage.setItem(K,JSON.stringify(s));c.closest('.tdi').classList.toggle('ck',c.checked)})})})()</script>"""
     return page("练习待办 · 成长学习站", b, directory(here="todo"))
+def klink(k):
+    t, u = KR[k]
+    return f'<a href="{e(u)}" target="_blank" rel="noopener">{e(t)} ↗</a>' if k in kok else f'{e(t)}（链接未通过检查）'
+def kcard(pg, cid, title, body):
+    return f'<div class="card" id="{cid}" data-id="growth|{pg}|{cid}" data-title="专项 · {e(title)}" data-url="{pg}.html#{cid}" data-page="{pg}.html#{cid}" data-date="2026-11-04" data-kind="k8s"><h4>{e(title)}</h4>{body}<div class="foot"><span class="acts"><button class="rd" title="标记完成">✓</button><button class="fv" title="收藏">☆</button></span></div></div>'
+def ktnav(i):
+    pv = f'<a class="tb" href="{KM[i-1]["id"]}.html">← 上一模块</a>' if i > 0 else '<a class="tb" href="k8s.html">← 总览</a>'
+    nx = f'<a class="tb" href="{KM[i+1]["id"]}.html">下一模块 →</a>' if i < len(KM)-1 else '<span class="tb dis">下一模块 →</span>'
+    return f'<div class="tnav"><a class="tb" href="index.html">🏠 首页</a><a class="tb" href="k8s.html">☸ 专项总览</a>{pv}{nx}</div>'
+def kpage(i):
+    m = KM[i]; pg = m["id"]
+    b = ktnav(i) + f'<div class="crumb"><span class="tag">🎯 专项 · K8s 与调度器</span></div><h1>模块{i+1} · {e(m["title"])}</h1>'
+    b += '<div class="meta">建议第 ' + str(i+1) + ' 周完成 · 工作日每天 30 分钟读讲义 · 周末前半天做实验 · 已完成 <span id="readcnt">0</span> 项</div>'
+    b += f'<h3 class="sec">目标</h3><p>{e(m["goal"])}</p>'
+    b += '<h3 class="sec">讲义 · 四栏卡片（读完一栏点 ✓）</h3><div class="four lec">' + "".join(kcard(pg, f"c{j+1}", h, x) for j, (h, x) in enumerate(m["four"])) + '</div>'
+    b += f'<h3 class="sec">动手实验（家里电脑，周末半天）</h3><div class="lec">{m["lab"]}</div>'
+    b += '<div class="grid">' + kcard(pg, "lab", "实验完成", f"<p>产出：{e(m['lab_out'])}</p>") + '</div>'
+    b += '<h3 class="sec">回忆题（先答再展开）</h3><ol class="lec">' + "".join(f'<li>{e(q)}<details class="ans"><summary>参考答案</summary><p>{e(a)}</p></details></li>' for q, a in m["qa"]) + '</ol>'
+    b += '<div class="grid">' + kcard(pg, "qa", "5 道回忆题已答完", "<p>答错的题记进卡片，进入复习。</p>") + '</div>'
+    b += '<h3 class="sec">复习安排（从你学完这一模块的那天算）</h3><table class="t"><tr><th>节点</th><th>做法</th></tr><tr><td>第 3 天</td><td>不看资料答 3 道回忆题，再对照四栏卡片</td></tr><tr><td>第 1 周</td><td>5 道题全答，含一道“什么时候会出问题”，并口述实验现象</td></tr><tr><td>第 1 个月</td><td>1 道综合题：把本模块和其他模块串起来讲一个完整场景（如：租户提交 GPU 作业到运行的全过程）</td></tr></table>'
+    b += '<h3 class="sec">来源（官方文档，2026-11-04 读取，链接已检查）</h3><ul>' + "".join(f"<li>{klink(k)}</li>" for k in m["refs"]) + '</ul>'
+    b += ktnav(i)
+    KIDS[pg] = re.findall(r'data-id="(growth\|[^"]+)"', b)
+    idx.append({"k": "k8s", "d": "2026-11-04", "t": f"专项 · 模块{i+1} · {m['title']}", "s": m["goal"][:60], "p": f"{pg}.html"})
+    return page(f"模块{i+1} · {m['title']} · 专项 · 成长学习站", b, directory(here=pg))
+def kindex():
+    b = '<div class="tnav"><a class="tb" href="index.html">🏠 首页</a><a class="tb" href="k8s-01.html">开始模块1 →</a></div><h1>🎯 专项：K8s 与调度器</h1>'
+    b += '<div class="meta">4 个模块 · 以通用原理为主，不从当前工作内容出发 · 内容基于官方文档，不确定处标“未核实”</div>'
+    b += '<div class="note">ℹ️ 为什么单独做：算力调度平台的核心是多集群资源、租户配额、任务排队与调度、异构 GPU。这里先把 K8s 交互和调度器的底层原理打通。</div>'
+    b += '<h3 class="sec">建议节奏</h3><ul class="lec"><li>4 个模块，<b>每周一个</b>。</li><li><b>工作日每天 30 分钟</b>读讲义、答回忆题。</li><li><b>每周末前半天</b>在家里电脑做实验（Docker + kind），实验清单同步在 <a href="todo.html#td-k8s-lab">练习待办</a>。</li><li>与 12 周主线<b>并行</b>：主线工作日内容不变，两者怎么穿插由你决定。</li></ul>'
+    b += '<h3 class="sec">模块</h3><div class="grid">'
+    for i, m in enumerate(KM):
+        b += f'<a class="card icard kmc" data-km="{m["id"]}" href="{m["id"]}.html"><div class="k">模块{i+1} · 建议第 {i+1} 周 · <span class="kfr">0/{len(KIDS[m["id"]])}</span></div><h4>{e(m["title"])}</h4><p>{e(m["goal"][:70])}…</p></a>'
+    b += '</div><h3 class="sec">学会的标准</h3><p>每个模块：四栏卡片 4 张都点 ✓、实验完成、5 道回忆题答完，侧边栏该模块打 ✓。最后能不看资料讲清“一个租户的 GPU 批作业从提交到运行，经过配额准入、排队、调度、设备分配的全过程”。</p>'
+    b += '<h3 class="sec">环境</h3><p>Docker + ' + klink("kind") + '，kubectl 见 ' + klink("tools") + '；Java 客户端用官方 ' + klink("jc") + '（K8s 官方客户端库列表收录）。</p>'
+    return page("专项：K8s 与调度器 · 成长学习站", b, directory(here="k8s"))
 if DIST.exists(): shutil.rmtree(DIST)
 (DIST / "assets").mkdir(parents=True)
 for f in ("style.css", "app.js"): shutil.copy(ROOT / "assets_src" / f, DIST / "assets" / f)
 for n in range(1, 13): (DIST / f"week-{n:02d}.html").write_text(week(n), "utf-8")
+KP = [kpage(i) for i in range(len(KM))]
+for i, m in enumerate(KM): (DIST / f"{m['id']}.html").write_text(KP[i], "utf-8")
+(DIST / "k8s.html").write_text(kindex(), "utf-8")
 (DIST / "assets" / "search-index.js").write_text("window.SEARCH=" + json.dumps(idx, ensure_ascii=False).replace("</", "<\\/") + ";", "utf-8")
 (DIST / "index.html").write_text(home(), "utf-8")
 NAV = {"start": str(START), "weeks": [[n, W[n-1][1]] for n in range(1, 13)], "wids": WIDS,
        "todo": [f'{t["id"]}|{sid}' for t in TODOS for sid, *_ in t["steps"]],
-       "todos": {t["id"]: [f'{t["id"]}|{sid}' for sid, *_ in t["steps"]] for t in TODOS}}
+       "kids": KIDS, "todos": {t["id"]: [f'{t["id"]}|{sid}' for sid, *_ in t["steps"]] for t in TODOS}}
 (DIST / "assets" / "nav.js").write_text("window.NAV=" + json.dumps(NAV, ensure_ascii=False).replace("</", "<\\/") + ";", "utf-8")
 (DIST / "todo.html").write_text(todo_page(), "utf-8")
 print("生成", DIST, "12 周 +首页；链接可用", len(ok), "/", len(L))
